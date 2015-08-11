@@ -22,7 +22,7 @@
 
 #AddonTitle
 {
-  margin-bottom: -15px;
+  margin-bottom: -150px;
   vertical-align: center;
   text-transform: uppercase;
   font-size: 42px;
@@ -41,8 +41,8 @@
 #CustomBg
 {
 
-  margin-top: -100px;
-  margin-left: -350px;
+  
+  margin-left: -175px;
     overflow: clip;
   pre-transform-scale2d: 1.0;
   animation-name: gamemode_anim;
@@ -64,11 +64,11 @@
   0%
   {
     transform: translateX( 0px ) translateY( 0px );
-    pre-transform-scale2d: .8;
+    pre-transform-scale2d: 1;
   }
 
   100%
   {
-    transform: translateX( 0px ) translateY( -100px );
+    transform: translateX( 0px ) translateY( -1px );
   }
 }

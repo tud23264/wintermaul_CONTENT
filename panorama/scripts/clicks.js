@@ -1,87 +1,80 @@
-"use strict";
+"use strict"
+
+function GetMouseTarget()
+{
+    var mouseEntities = GameUI.FindScreenEntities( GameUI.GetCursorPosition() )
+    var localHeroIndex = Players.GetPlayerHeroEntityIndex( Players.GetLocalPlayer() )
+
+    for ( var e of mouseEntities )
+    {
+        if ( !e.accurateCollision )
+            continue
+        return e.entityIndex
+    }
+
+    for ( var e of mouseEntities )
+    {
+        return e.entityIndex
+    }
+
+    return 0
+}
 
 // Handle Right Button events
 function OnRightButtonPressed()
 {
-	$.Msg("OnRightButtonPressed")
+    var iPlayerID = Players.GetLocalPlayer()
+    var selectedEntities = Players.GetSelectedEntities( iPlayerID )
+    var mainSelected = Players.GetLocalPlayerPortraitUnit() 
+    var targetIndex = GetMouseTarget()
+    var pressedShift = GameUI.IsShiftDown()
 
-	var iPlayerID = Players.GetLocalPlayer();
-	var mainSelected = Players.GetLocalPlayerPortraitUnit();
-	var cursor = GameUI.GetCursorPosition();
-	var mouseEntities = GameUI.FindScreenEntities( cursor );
-	mouseEntities = mouseEntities.filter( function(e) { return e.entityIndex != mainSelected; } )
-	
-	var pressedShift = GameUI.IsShiftDown();
+    // Builder Right Click
+    if ( IsBuilder( mainSelected ) )
+    {
+        // Cancel BH
+        if (!pressedShift) SendCancelCommand()
+    }
 
-	// Builder Right Click
-	if ( IsBuilder( mainSelected ) )
-	{
-		// Cancel BH
-		SendCancelCommand();
-
-		// If it's mousing over entities
-		if (mouseEntities.length > 0)
-		{
-			for ( var e of mouseEntities )
-			{
-				// Repair rightclick
-				if ( IsCustomBuilding(e.entityIndex) && Entities.GetHealthPercent(e.entityIndex) < 100 && Entities.IsControllableByPlayer( e.entityIndex, iPlayerID ) ){
-					$.Msg("Player "+iPlayerID+" Clicked on a building unit with health missing")
-					GameEvents.SendCustomGameEventToServer( "repair_order", { pID: iPlayerID, mainSelected: mainSelected, targetIndex: e.entityIndex, queue: pressedShift })
-					return true;
-				}
-				return false;
-			}
-		}
-			
-	}
-
-	return false;
+    return false
 }
 
-// Builders require the "builder" label in its unit definition
-function IsBuilder( entIndex ) {
-	return (Entities.GetUnitLabel( entIndex ) == "builder")
+// Handle Left Button events
+function OnLeftButtonPressed() {
+    return false
+}
+
+function IsBuilder(entIndex) {
+    var tableValue = CustomNetTables.GetTableValue( "builders", entIndex.toString())
+    return (tableValue !== undefined) && (tableValue.IsBuilder == 1)
 }
 
 // Main mouse event callback
 GameUI.SetMouseCallback( function( eventName, arg ) {
-    var CONSUME_EVENT = true;
-    var CONTINUE_PROCESSING_EVENT = false;
+    var CONSUME_EVENT = true
+    var CONTINUE_PROCESSING_EVENT = false
+    var LEFT_CLICK = (arg === 0)
+    var RIGHT_CLICK = (arg === 1)
 
     if ( GameUI.GetClickBehaviors() !== CLICK_BEHAVIORS.DOTA_CLICK_BEHAVIOR_NONE )
-        return CONTINUE_PROCESSING_EVENT;
+        return CONTINUE_PROCESSING_EVENT
 
     var mainSelected = Players.GetLocalPlayerPortraitUnit()
 
-    if ( eventName === "pressed" && IsBuilder(mainSelected))
+    if ( eventName === "pressed" || eventName === "doublepressed")
     {
-        // Left-click with a builder while BH is active
-        if ( arg === 0 && state == "active")
-        {
-            return SendBuildCommand();
-        }
+        // Builder Clicks
+        if (IsBuilder(mainSelected))
+            if (LEFT_CLICK) 
+                return (state == "active") ? SendBuildCommand() : OnLeftButtonPressed()
+            else if (RIGHT_CLICK) 
+                return OnRightButtonPressed()
 
-        // Right-click (Cancel & Repair)
-        if ( arg === 1 )
-        {
-            return OnRightButtonPressed();
-        }
+        if (LEFT_CLICK) 
+            return OnLeftButtonPressed()
+        else if (RIGHT_CLICK) 
+            return OnRightButtonPressed() 
+        
     }
-    else if ( eventName === "pressed" || eventName === "doublepressed")
-    {
-        // Left-click
-        if ( arg === 0 )
-        {
-            //OnLeftButtonPressed();
-            return CONTINUE_PROCESSING_EVENT;
-        }
-
-        // Right-click
-        if ( arg === 1 )
-        {
-            return OnRightButtonPressed();
-        }
-    }
-    return CONTINUE_PROCESSING_EVENT;
-} );
+    return CONTINUE_PROCESSING_EVENT
+} )

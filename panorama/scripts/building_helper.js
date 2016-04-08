@@ -9,7 +9,10 @@ var size = 0;
 var overlay_size = 0;
 var range = 0;
 var pressedShift = false;
+var altPress = false;
 var altDown = false;
+var altDownTest = false;
+var altUp = false;
 var requires;
 var modelParticle;
 var propParticle;
@@ -264,8 +267,23 @@ function StartBuildingHelper( params )
             }
 
             // Overlay Grid, visible with Alt pressed
-            altDown = permanent_alt_grid || GameUI.IsAltDown();
-            if (altDown)
+            altPress = permanent_alt_grid || GameUI.IsAltDown();
+            if (altPress)
+            {
+                altDown = !altDown
+            }
+            if (altDown && !altUp)
+            {   
+            altDownTest = !altDownTest
+            altUp = true
+            }
+            if (!altPress)
+            {
+            altDown = false
+            altUp = false   
+            }
+
+            if (altDownTest)
             {
                 // Create the particles
                 if (overlayParticles && overlayParticles.length == 0)
